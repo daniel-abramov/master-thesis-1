@@ -3,3 +3,5 @@
 *~
 *.exe
 *.x
+.DS_Store
+*.app/
