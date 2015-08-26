@@ -31,7 +31,6 @@ GLWidget::GLWidget(const QString& filename, QWidget* parent)
 
             luminance[x][y] = yuv_y;
         }
-        // std::sort(luminance[x].begin(), luminance[x].end());
     }
 
     m_luminance.swap(luminance);
@@ -43,6 +42,10 @@ void GLWidget::initializeGL()
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glShadeModel(GL_FLAT);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // glClearColor(0.0,0.0,0.0,0.0);
 }
 
 void GLWidget::paintGL()
@@ -50,8 +53,6 @@ void GLWidget::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-
-    glColor3f(0.0, 1.0f, 0.0);
 
     static const double kLeft = -1.0;
     static const double kRight = 1.0;
@@ -61,50 +62,27 @@ void GLWidget::paintGL()
     const double xScale = (kRight - kLeft) / m_luminance.size();
     const double yScale = (kTop - kBottom) / 255.0;
 
-    glBegin( GL_LINES /*GL_POINTS*/ );
+    const double colorStep = 1.0 / 5; // m_luminance[0].size();
 
-    for (size_t y = 0; y < m_luminance[0].size(); ++y) {
+    std::vector<std::map<double, double>> colors(m_luminance.size());
+
+    double greenValue = 0.0;
+
+    double z = 0.0;
+    for (size_t y = 0; y < m_luminance[0].size(); ++y, greenValue += colorStep, z += 0.001) {
+        glBegin(GL_LINES);
+        // glColor3f(0.0, greenValue, 0.0);
+        glVertex3f(kLeft, 0.0, 0.0);
         for (size_t x = 0; x < m_luminance.size(); ++x) {
-            glVertex3f(kLeft + x * xScale, kBottom + m_luminance[x][y] * yScale, 0.0);
+            double plotX = kLeft + x * xScale;
+            double plotY = kBottom + m_luminance[x][y] * yScale;
+            // colors[x][plotY] += colorStep;
+            // glColor3f(0.0, colors[x][plotY], 0.0);
+            glColor4f(0.0, 1.0, z, 0.5);
+            glVertex3f(plotX, plotY, 0.0);
         }
+        glEnd();
     }
-
-    glEnd();
-
-    /*
-    glBegin(GL_QUADS);
-    glColor3f(0.0, 1.0f, 0.0);
-    glVertex3f(0.0, 0.0, 0.0);
-    glVertex3f(0.0, 1.0, 0.0);
-    glVertex3f(1.0, 1.0, 0.0);
-    glVertex3f(1.0, 0.0, 0.0);
-    glEnd();
-
-    glBegin(GL_QUADS);
-    glColor3f(0.0, 0.0, 1.0f);
-    glVertex3f(0.0, -1.0, 0.0f);
-    glVertex3f(2.0, -1.0, 0.0f);
-    glVertex3f(1.5, 0.0, 0.0f);
-    glEnd();
-
-    glBegin(GL_POINTS);
-    //glPointSize(3.0f);
-    glColor3f(1.0f, 0.0f, 0.0);
-    glVertex3f(0.0f, 0.0f, 0.0);
-    glVertex3f(0.1f, 0.0f, 0.0);
-    glVertex3f(0.9f, 0.0f, 0.0);
-    glVertex3f(0.0f, 0.9f, 0.0);
-    glVertex3f(0.5f, 0.5f, 0.0);
-
-    //glColor3f(0.0, 0.0, 1.0f);
-    for (int i = 0; i < 5; ++i) {
-        glVertex3f(1.0f + 0.1*i, 0.0f, 0.0);
-    }
-
-    //glVertex3f(1.0f, 1.0f, 0.0);
-    //glVertex3f(2.0f, 2.0f, 0.0);
-    glEnd();
-    */
 }
 
 void GLWidget::resizeGL(int width, int height)
