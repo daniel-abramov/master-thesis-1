@@ -10,6 +10,7 @@
 GLWidget::GLWidget(const QString& filename, QWidget* parent)
     : QGLWidget(parent)
     , m_imageFilename(filename)
+    , m_mode(MODE_DOTS)
 {
     if (m_imageFilename.isEmpty())
         return;
@@ -26,8 +27,6 @@ GLWidget::GLWidget(const QString& filename, QWidget* parent)
             uint32_t b = ((pixel & 0x000000FF));
 
             double yuv_y = (0.299*r + 0.587*g + 0.114*b);
-            if (yuv_y > 255.0 || yuv_y < 0.0)
-                qDebug() << "WTF?!";
 
             luminance[x][y] = yuv_y;
         }
@@ -45,7 +44,7 @@ void GLWidget::initializeGL()
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // glClearColor(0.0,0.0,0.0,0.0);
+    glClearColor(0.0,0.0,0.0,0.0);
 }
 
 void GLWidget::paintGL()
@@ -62,24 +61,41 @@ void GLWidget::paintGL()
     const double xScale = (kRight - kLeft) / m_luminance.size();
     const double yScale = (kTop - kBottom) / 255.0;
 
-    const double colorStep = 1.0 / 5; // m_luminance[0].size();
+    const double colorStep = (m_mode == MODE_LINES_INCREASING_BRIGHTNESS)
+        ? 1.0 / m_luminance[0].size()
+        : 1.0 / 5.0; // levels
 
     std::vector<std::map<double, double>> colors(m_luminance.size());
-
     double greenValue = 0.0;
-
     double z = 0.0;
+
     for (size_t y = 0; y < m_luminance[0].size(); ++y, greenValue += colorStep, z += 0.001) {
-        glBegin(GL_LINES);
-        // glColor3f(0.0, greenValue, 0.0);
+        glBegin( m_mode == MODE_DOTS ? GL_POINTS : GL_LINES );
         glVertex3f(kLeft, 0.0, 0.0);
         for (size_t x = 0; x < m_luminance.size(); ++x) {
             double plotX = kLeft + x * xScale;
             double plotY = kBottom + m_luminance[x][y] * yScale;
-            // colors[x][plotY] += colorStep;
-            // glColor3f(0.0, colors[x][plotY], 0.0);
-            glColor4f(0.0, 1.0, z, 0.5);
-            glVertex3f(plotX, plotY, 0.0);
+
+            switch (m_mode) {
+                case MODE_DOTS:
+                case MODE_LINES:
+                    glColor3f(0.0, 1.0, 0.0);
+                    break;
+                case MODE_LINES_INCREASING_BRIGHTNESS:
+                    glColor3f(0.0, greenValue, 0.0);
+                    break;
+                case MODE_LINES_ACCUMULATE:
+                    colors[x][plotY] += colorStep;
+                    glColor3f(0.0, colors[x][plotY], 0.0);
+                    break;
+                case MODE_LINES_ALPHA:
+                    glColor4f(0.0, 1.0, 0.0, 0.5);
+                    break;
+                default:
+                    Q_ASSERT(0);
+            }
+
+            glVertex3f(plotX, plotY, m_mode == MODE_LINES_ALPHA ? z : 0.0);
         }
         glEnd();
     }
@@ -107,4 +123,24 @@ void GLWidget::resizeGL(int width, int height)
     //gluLookAt(1, 1, -1.0, 0, 0, 0, 0, 1, 0);
     //glFrustum(0, 1, 0, 1, 0.1, 2);
     //glOrtho(0, 1, 0, 1, 0.1, 1.5);
+}
+
+void GLWidget::keyPressEvent(QKeyEvent* keyEvent)
+{
+    qDebug() << "get here";
+
+    if (keyEvent->key() == Qt::Key_0) {
+        m_mode = MODE_DOTS;
+    } else if (keyEvent->key() == Qt::Key_1) {
+        m_mode = MODE_LINES;
+    } else if (keyEvent->key() == Qt::Key_2) {
+        m_mode = MODE_LINES_INCREASING_BRIGHTNESS;
+    } else if (keyEvent->key() == Qt::Key_3) {
+        m_mode = MODE_LINES_ACCUMULATE;
+    } else if (keyEvent->key() == Qt::Key_4) {
+        m_mode = MODE_LINES_ALPHA;
+    }
+
+    QGLWidget::keyPressEvent(keyEvent);
+    update();
 }

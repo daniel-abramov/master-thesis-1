@@ -19,6 +19,7 @@ MainWidget::MainWidget(const QString& filename, QWidget *parent)
     : QWidget(parent)
 {
     GLWidget* glWidget = new GLWidget(filename, this);
+    glWidget->setFocusPolicy(Qt::StrongFocus);
     QVBoxLayout* layout = new QVBoxLayout();
     layout->addWidget(glWidget);
     setLayout(layout);
