@@ -7,11 +7,11 @@
 
 #include <algorithm>
 
-GLWidget::GLWidget(const QString& filename, QWidget* parent)
+GLWidget::GLWidget(QWidget* parent)
     : QGLWidget(parent)
-    , m_imageFilename(filename)
     , m_mode(MODE_DOTS)
 {
+    /* TODO: use if needed later
     if (m_imageFilename.isEmpty())
         return;
 
@@ -31,8 +31,7 @@ GLWidget::GLWidget(const QString& filename, QWidget* parent)
             luminance[x][y] = yuv_y;
         }
     }
-
-    m_luminance.swap(luminance);
+    */
 }
 
 void GLWidget::initializeGL()
@@ -41,7 +40,6 @@ void GLWidget::initializeGL()
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glShadeModel(GL_FLAT);
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glClearColor(0.0,0.0,0.0,0.0);
@@ -49,6 +47,8 @@ void GLWidget::initializeGL()
 
 void GLWidget::paintGL()
 {
+    return;
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -103,32 +103,14 @@ void GLWidget::paintGL()
 
 void GLWidget::resizeGL(int width, int height)
 {
-    qDebug() << "resizeGL" << width << height;
-
     if (width == 0 || height == 0)
         return;
-
-    glViewport(0, 0, width, height); // ???
-
-    // glMatrixMode(GL_PROJECTION);
-    // glLoadIdentity();
-
-    // /GLfloat m[16] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1 };
-    // glLoadMatrixf(m);
-
-    //gluLookAt(0, 0, -1, 0, 0, 0, 0, 1, 0);
-    //glTranslatef(1.0, 0.0, 0.0);
-    //glMatrixMode(GL_PERSPECTIVE);
-    //gluPerspective(120.0, width/height, 0.1, 10.0);
-    //gluLookAt(1, 1, -1.0, 0, 0, 0, 0, 1, 0);
-    //glFrustum(0, 1, 0, 1, 0.1, 2);
-    //glOrtho(0, 1, 0, 1, 0.1, 1.5);
+    glViewport(0, 0, width, height);
 }
 
 void GLWidget::keyPressEvent(QKeyEvent* keyEvent)
 {
-    qDebug() << "get here";
-
+    /* TODO: use when needed
     if (keyEvent->key() == Qt::Key_0) {
         m_mode = MODE_DOTS;
     } else if (keyEvent->key() == Qt::Key_1) {
@@ -139,7 +121,7 @@ void GLWidget::keyPressEvent(QKeyEvent* keyEvent)
         m_mode = MODE_LINES_ACCUMULATE;
     } else if (keyEvent->key() == Qt::Key_4) {
         m_mode = MODE_LINES_ALPHA;
-    }
+    } */
 
     QGLWidget::keyPressEvent(keyEvent);
     update();

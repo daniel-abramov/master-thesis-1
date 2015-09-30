@@ -15,12 +15,12 @@ SOURCES += main.cpp \
            glwidget.cpp
 
 HEADERS  += mainwidget.h \
-            glwidget.h
+            glwidget.h \
+            libav.h
 
 QMAKE_CXXFLAGS += -std=c++11
 
-# LIBS+= -lavcodec -lavformat -lavutil
+LIBS+= -lavcodec -lavformat -lavutil
 #INCLUDEPATH += /usr/local/include/libavcodec
 #INCLUDEPATH += /usr/local/include/libavformat
 #INCLUDEPATH += /usr/local/include/libavutil
-

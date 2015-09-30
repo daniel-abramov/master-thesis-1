@@ -8,7 +8,7 @@ class GLWidget : public QGLWidget
     Q_OBJECT
 
 public:
-    explicit GLWidget(const QString& filename, QWidget* parent = nullptr);
+    explicit GLWidget(QWidget* parent = nullptr);
     virtual QSize minimumSizeHint() const override { return QSize(320, 240); }
 
 private:
@@ -25,7 +25,6 @@ private:
     virtual void resizeGL(int width, int height) override;
     virtual void keyPressEvent(QKeyEvent* keyEvent) override;
 
-    QString m_imageFilename;
     std::vector<std::vector<double>> m_luminance;
     DrawMode m_mode;
 };

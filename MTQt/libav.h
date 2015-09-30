@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <exception>
 #include <iostream>
@@ -19,6 +20,7 @@ extern "C" {
 class NoCopy
 {
 public:
+    NoCopy() = default;
     NoCopy(const NoCopy&) = delete;
     NoCopy& operator=(const NoCopy&) = delete;
 };
@@ -42,6 +44,13 @@ public:
                     std::cerr << "unknown error ";
             }
         }
+    }
+
+    template< typename T >
+    AVError& operator<<(const T& arg)
+    {
+        std::cerr << arg;
+        return *this;
     }
 };
 
@@ -114,15 +123,18 @@ private:
 };
 
 
+class AVInputFile;
+
+
 struct AVCodec
 {
     friend class AVInputFile;
     friend class AVStream;
 
-    const AVInputFile& const  input;
-    ::AVCodecContext* const   context;
-    const ::AVRational        timeBase;
-    const unsigned            index;
+    const AVInputFile&       input;
+    ::AVCodecContext* const  context;
+    const ::AVRational       timeBase;
+    const unsigned           index;
 
 private:
     AVCodec(const AVInputFile& inp, ::AVCodecContext* ctx, ::AVRational tb, unsigned idx)
@@ -133,7 +145,7 @@ private:
     { }
 
     AVCodec(const AVCodec& other)
-        : AVCodec(other.input, other.context, other.timebase, other.index)
+        : AVCodec(other.input, other.context, other.timeBase, other.index)
     { }
 
     AVCodec& operator=(const AVCodec&) = delete;
@@ -161,12 +173,12 @@ public:
 
     virtual ~AVInputFile()
     {
-        ::av_close_input_file(m_formatCtx);
+        ::avformat_close_input(const_cast<::AVFormatContext**>(&m_formatCtx));
     }
 
     const char* GetFileName() const { return m_formatCtx->filename; }
     uint64_t GetDuration() const { return (uint64_t)m_formatCtx->duration * 1000000 / AV_TIME_BASE; } // microseconds
-    uint64_t GetFileSize() const { return m_formatCtx->file_size; } // bytes
+    uint64_t GetFileSize() const { return 0; /* TODO: m_formatCtx->filesize; */ } // bytes
     unsigned GetBitRate() const { return m_formatCtx->bit_rate; }
     const char* GetContainerName() const { return m_formatCtx->iformat->name; }
 
@@ -179,7 +191,7 @@ public:
     {
         for (unsigned i = 0; i < m_formatCtx->nb_streams; ++i) {
             if (m_formatCtx->streams[i]->codec->codec_type == type)
-                return AVCodec(*this, m_formatCtx->streams[i]->codec, m_formatContext->streams[i]->time_base, i);
+                return AVCodec(*this, m_formatCtx->streams[i]->codec, m_formatCtx->streams[i]->time_base, i);
         }
         throw AVError("FindStream") << "no stream of type " << type;
     }
@@ -239,7 +251,7 @@ public:
         }
 
         Free();
-        if (::av_read_frame(in.m_formatContext, &m_rawPacket) < 0)
+        if (::av_read_frame(in.m_formatCtx, &m_rawPacket) < 0)
             return false;
 
         m_packet = m_rawPacket;
@@ -318,7 +330,7 @@ class AVFrame : public AVFrameBase
 public:
     AVFrame()
     {
-        ::avcodec_get_frame_defaults(&m_frame);
+        ::av_frame_unref(&m_frame);
     }
 
     const ::AVFrame* GetRaw() const { return &m_frame; }
@@ -347,10 +359,10 @@ struct AVSampleFormat
     unsigned          channels;
     unsigned          sampleRate;
 
-    AVSampleFormat(::AVSampleFormat format, unsigned channels, unsigned rate)
-        : Format(format)
-        , Channels(channels)
-        , Rate(rate)
+    AVSampleFormat(::AVSampleFormat format, unsigned channels, unsigned sampleRate)
+        : format(format)
+        , channels(channels)
+        , sampleRate(sampleRate)
     { }
 };
 
@@ -359,7 +371,7 @@ class AVSamples : public AVFrameBase
 {
 public:
     AVSamples()
-        : m_capacity(AVCODEC_MAX_AUDIO_FRAME_SIZE)
+        : m_capacity(192000) // 1 second of 48khz 32 bit audio
         , m_samples(static_cast<int16_t*>(::av_malloc(m_capacity)))
         , m_size(0)
         , m_timestamp(0)
@@ -385,7 +397,7 @@ public:
 
     AVSampleFormat GetFormat() const
     {
-        return AVSampleFormat(m_codecCtx->channels, m_codecCtx->sample_rate, m_codecCtx->sample_fmt);
+        return AVSampleFormat(m_codecCtx->sample_fmt, m_codecCtx->channels, m_codecCtx->sample_rate);
     }
 
     ::AVCodecContext* GetCodecContext() const { return m_codecCtx; }
@@ -397,7 +409,7 @@ private:
     size_t        m_size;
     uint64_t      m_timestamp;
 
-    ::AVCodecContext* m_formatCtx;
+    ::AVCodecContext* m_codecCtx;
 };
 
 
@@ -425,13 +437,13 @@ protected:
 
     AVCodecBase(::AVCodecContext* ctx)
         : m_codec(Construct(ctx))
-        , m_codecCtx(ctx)
+        , m_codecCtx(ctx, ::av_free)
     {
     }
 
     AVCodecBase(::AVCodec* cdc)
         : m_codec(cdc)
-        , m_codecCtx(::avcodec_alloc_context3(m_codec))
+        , m_codecCtx(::avcodec_alloc_context3(m_codec), ::av_free)
     {
         if (! m_codecCtx)
             throw AVError("avcodec_alloc_context3");
@@ -446,14 +458,16 @@ protected:
     void Init()
     {
         PrepareContext();
-        int err = ::avcodec_open2(m_codecCtx.Get(), m_codec, nullptr);
+        int err = ::avcodec_open2(m_codecCtx.get(), m_codec, nullptr);
         if (err)
             throw AVError("avcodec_open2", err);
     }
 
 protected:
     ::AVCodec* const m_codec;
-    std::unique_ptr<AVCodecContext, ::av_free> const m_codecCtx;
+
+    typedef decltype(::av_free) *AVFreeFunc;
+    std::unique_ptr<AVCodecContext, AVFreeFunc> const m_codecCtx;
 };
 
 
@@ -510,7 +524,7 @@ public:
 
         int finished = 0;
         while (! packet.Empty() && ! finished) {
-            int s = m_engine.Decode(m_codecCtx.Get(), frame, packet, finished);
+            int s = m_engine.Decode(m_codecCtx.get(), frame, packet, finished);
             if (s < 0) {
                 if (failed)
                     throw AVError(m_engine.GetName());
@@ -541,7 +555,7 @@ class AVStream : NoCopy
         bool                          cont;
 
         Worker(const AVInputFile& inp)
-            : codec(inp.FindStream(Engine.GetStreamType()))
+            : codec(inp.FindStream(engine.GetStreamType()))
             , decoder(codec, engine)
             , timeOffset(0)
             , index(0)
@@ -630,7 +644,7 @@ public:
     virtual ~AVImageConvert()
     {
         if (m_swsCtx)
-            ::sws_freeContext(Ctx);
+            ::sws_freeContext(m_swsCtx);
     }
 
     void Convert(AVFrame& dst, const AVFrame& src)
@@ -766,7 +780,7 @@ public:
 
     AVTempSamples(unsigned channels, unsigned rate, ::AVSampleFormat format, const AVSamples& src)
     {
-        AVSampleFormat fmt(channels, rate, format);
+        AVSampleFormat fmt(format, channels, rate);
         ConvertSamples(fmt, src);
     }
 
@@ -776,7 +790,7 @@ private:
         ::AVCodecContext* ctx = src.GetCodecContext();
         if (! ctx)
             throw AVError("ctx");
-        AVSampleFormat sfmt(ctx->channels, ctx->sample_rate, ctx->sample_fmt);
+        AVSampleFormat sfmt(ctx->sample_fmt, ctx->channels, ctx->sample_rate);
         AVSampleConvert convert(sfmt, fmt);
         convert.Convert(*this, src);
         SetTimeBase(src.GetTimeBase());
@@ -812,9 +826,9 @@ public:
 protected:
     virtual void PrepareContext()
     {
-        m_codecCtx.Get()->pix_fmt = m_dstf.format;
-        m_codecCtx.Get()->width = m_dstf.width;
-        m_codecCtx.Get()->height = m_dstf.height;
+        m_codecCtx->pix_fmt = m_dstf.format;
+        m_codecCtx->width = m_dstf.width;
+        m_codecCtx->height = m_dstf.height;
     }
 
 private:
