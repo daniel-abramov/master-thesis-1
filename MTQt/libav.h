@@ -801,10 +801,10 @@ private:
 };
 
 
-class TAVThumbnailEncoder : AVInit, public AVCodecBase
+class AVThumbnailEncoder : AVInit, public AVCodecBase
 {
 public:
-    TAVThumbnailEncoder(const char* codec, unsigned width, unsigned height)
+    AVThumbnailEncoder(const char* codec, unsigned width, unsigned height)
         : AVCodecBase(Construct(codec))
         , m_dstf(width, height, m_codec->pix_fmts[0])
     {
