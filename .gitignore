@@ -5,3 +5,5 @@
 *.x
 .DS_Store
 *.app/
+*moc_*.cpp
+tags

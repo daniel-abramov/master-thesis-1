@@ -14,7 +14,7 @@ class GLWidget : public QGLWidget
 
 public:
     explicit GLWidget(QWidget* parent = nullptr);
-    virtual QSize minimumSizeHint() const override { return QSize(320, 240); }
+    virtual QSize minimumSizeHint() const override { return QSize(320, 255); }
 
     void FeedFrame(const libav::AVFrame* frame);
 

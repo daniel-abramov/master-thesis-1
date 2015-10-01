@@ -17,27 +17,6 @@ GLWidget::GLWidget(QWidget* parent)
     , m_mode(MODE_DOTS)
     , m_frame(nullptr)
 {
-    /* TODO: use if needed later
-    if (m_imageFilename.isEmpty())
-        return;
-
-    QImage image(filename);
-
-    std::vector<std::vector<double>> luminance(image.width());
-    for (int x = 0; x < image.width(); ++x) {
-        luminance[x].resize(image.height());
-        for (int y = 0; y < image.height(); ++y) {
-            QRgb pixel = image.pixel(x, y);
-            uint32_t r = ((pixel & 0x00FF0000) >> 4*4);
-            uint32_t g = ((pixel & 0x0000FF00) >> 2*4);
-            uint32_t b = ((pixel & 0x000000FF));
-
-            double yuv_y = (0.299*r + 0.587*g + 0.114*b);
-
-            luminance[x][y] = yuv_y;
-        }
-    }
-    */
 }
 
 void GLWidget::FeedFrame(const libav::AVFrame* frame)
@@ -78,8 +57,6 @@ void GLWidget::paintGL()
     const double colorStep = (m_mode == MODE_LINES_INCREASING_BRIGHTNESS)
         ? 1.0 / m_frame->GetHeight()
         : 1.0 / 5.0; // levels
-
-    // std::vector<std::map<double, double>> colors(m_luminance.size());
     double greenValue = 0.0;
     double z = 0.0;
 
@@ -97,10 +74,6 @@ void GLWidget::paintGL()
                     break;
                 case MODE_LINES_INCREASING_BRIGHTNESS:
                     glColor3f(0.0, greenValue, 0.0);
-                    break;
-                case MODE_LINES_ACCUMULATE:
-                    // colors[x][plotY] += colorStep;
-                    // glColor3f(0.0, colors[x][plotY], 0.0);
                     break;
                 case MODE_LINES_ALPHA:
                     glColor4f(0.0, 1.0, 0.0, 0.5);
@@ -124,7 +97,6 @@ void GLWidget::resizeGL(int width, int height)
 
 void GLWidget::keyPressEvent(QKeyEvent* keyEvent)
 {
-    /* TODO: use when needed
     if (keyEvent->key() == Qt::Key_0) {
         m_mode = MODE_DOTS;
     } else if (keyEvent->key() == Qt::Key_1) {
@@ -132,10 +104,8 @@ void GLWidget::keyPressEvent(QKeyEvent* keyEvent)
     } else if (keyEvent->key() == Qt::Key_2) {
         m_mode = MODE_LINES_INCREASING_BRIGHTNESS;
     } else if (keyEvent->key() == Qt::Key_3) {
-        m_mode = MODE_LINES_ACCUMULATE;
-    } else if (keyEvent->key() == Qt::Key_4) {
         m_mode = MODE_LINES_ALPHA;
-    } */
+    }
 
     QGLWidget::keyPressEvent(keyEvent);
     update();
