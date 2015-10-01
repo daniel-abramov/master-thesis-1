@@ -7,3 +7,4 @@
 *.app/
 *moc_*.cpp
 tags
+*.pro.user
