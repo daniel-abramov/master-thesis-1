@@ -437,7 +437,7 @@ protected:
 
     AVCodecBase(::AVCodecContext* ctx)
         : m_codec(Construct(ctx))
-        , m_codecCtx(ctx, ::av_free)
+        , m_codecCtx(ctx, dummy_free)
     {
     }
 
@@ -462,6 +462,8 @@ protected:
         if (err)
             throw AVError("avcodec_open2", err);
     }
+
+    static void dummy_free(void*) { }
 
 protected:
     ::AVCodec* const m_codec;
