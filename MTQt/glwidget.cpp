@@ -58,9 +58,9 @@ void GLWidget::paintGL()
         ? 1.0 / m_frame->GetHeight()
         : 1.0 / 5.0; // levels
     double greenValue = 0.0;
-    double z = 0.0;
+    double z = -0.2;
 
-    for (size_t y = 0; y < m_frame->GetHeight(); ++y, greenValue += colorStep, z += 0.001) {
+    for (size_t y = 0; y < m_frame->GetHeight(); ++y, greenValue += colorStep, z += 0.01) {
         glBegin( m_mode == MODE_DOTS ? GL_POINTS : GL_LINES );
         glVertex3f(kLeft, 0.0, 0.0);
         for (size_t x = 0; x < m_frame->GetWidth(); ++x) {
@@ -76,7 +76,7 @@ void GLWidget::paintGL()
                     glColor3f(0.0, greenValue, 0.0);
                     break;
                 case MODE_LINES_ALPHA:
-                    glColor4f(0.0, 1.0, 0.0, 0.5);
+                    glColor4f(0.0, 1.0, 0.0, z);
                     break;
                 default:
                     Q_ASSERT(0);
