@@ -8,11 +8,12 @@
 
 MainWidget::MainWidget(QWidget* parent)
     : QWidget(parent)
+    , m_glWidget(new GLWidget(this))
+    , m_frameExtractor(*m_glWidget, "/Users/daniel/Movies/20150909_111119.mp4")
 {
-    GLWidget* glWidget = new GLWidget(this);
-    glWidget->setFocusPolicy(Qt::StrongFocus);
+    m_glWidget->setFocusPolicy(Qt::StrongFocus);
     QVBoxLayout* layout = new QVBoxLayout();
-    layout->addWidget(glWidget);
+    layout->addWidget(m_glWidget);
     setLayout(layout);
     resize(640, 480);
 }

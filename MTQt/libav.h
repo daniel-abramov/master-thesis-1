@@ -594,7 +594,7 @@ public:
     }
 
     template< typename TCallback >
-    bool Decode(TCallback& callback)
+    bool Decode(TCallback& callback, bool decodeSinglePacket = false) // by default decode all packets (whole file)
     {
         while (m_packet.Empty()) {
             if (! m_packet.Read(m_input, callback.stopped))
@@ -605,6 +605,9 @@ public:
             if (! video && ! audio)
                 return true;
             m_packet.Consume(m_packet.Size());
+
+            if (decodeSinglePacket)
+                return true;
         }
         return true;
     }

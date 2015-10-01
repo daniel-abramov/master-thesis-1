@@ -1,7 +1,12 @@
 #pragma once
 
+#include "libav.h"
+
 #include <QGLWidget>
 #include <QKeyEvent>
+
+struct YFrameInfo {
+};
 
 class GLWidget : public QGLWidget
 {
@@ -10,6 +15,8 @@ class GLWidget : public QGLWidget
 public:
     explicit GLWidget(QWidget* parent = nullptr);
     virtual QSize minimumSizeHint() const override { return QSize(320, 240); }
+
+    void FeedFrame(const libav::AVFrame* frame);
 
 private:
     enum DrawMode {
@@ -25,6 +32,6 @@ private:
     virtual void resizeGL(int width, int height) override;
     virtual void keyPressEvent(QKeyEvent* keyEvent) override;
 
-    std::vector<std::vector<double>> m_luminance;
     DrawMode m_mode;
+    const libav::AVFrame* m_frame;
 };

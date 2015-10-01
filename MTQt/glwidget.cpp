@@ -7,9 +7,15 @@
 
 #include <algorithm>
 
+static inline uint8_t GetY(int x, int y, const libav::AVFrame *f)
+{
+    return f->GetPlane(0)[ (y * f->GetLineSize(0)) + x ];
+}
+
 GLWidget::GLWidget(QWidget* parent)
     : QGLWidget(parent)
     , m_mode(MODE_DOTS)
+    , m_frame(nullptr)
 {
     /* TODO: use if needed later
     if (m_imageFilename.isEmpty())
@@ -34,6 +40,12 @@ GLWidget::GLWidget(QWidget* parent)
     */
 }
 
+void GLWidget::FeedFrame(const libav::AVFrame* frame)
+{
+    m_frame = frame;
+    update();
+}
+
 void GLWidget::initializeGL()
 {
     qglClearColor(Qt::black);
@@ -47,34 +59,36 @@ void GLWidget::initializeGL()
 
 void GLWidget::paintGL()
 {
-    return;
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+
+    if (m_frame == nullptr) {
+        return;
+    }
 
     static const double kLeft = -1.0;
     static const double kRight = 1.0;
     static const double kBottom = -1.0;
     static const double kTop = 1.0;
 
-    const double xScale = (kRight - kLeft) / m_luminance.size();
+    const double xScale = (kRight - kLeft) / m_frame->GetWidth();
     const double yScale = (kTop - kBottom) / 255.0;
 
     const double colorStep = (m_mode == MODE_LINES_INCREASING_BRIGHTNESS)
-        ? 1.0 / m_luminance[0].size()
+        ? 1.0 / m_frame->GetHeight()
         : 1.0 / 5.0; // levels
 
-    std::vector<std::map<double, double>> colors(m_luminance.size());
+    // std::vector<std::map<double, double>> colors(m_luminance.size());
     double greenValue = 0.0;
     double z = 0.0;
 
-    for (size_t y = 0; y < m_luminance[0].size(); ++y, greenValue += colorStep, z += 0.001) {
+    for (size_t y = 0; y < m_frame->GetHeight(); ++y, greenValue += colorStep, z += 0.001) {
         glBegin( m_mode == MODE_DOTS ? GL_POINTS : GL_LINES );
         glVertex3f(kLeft, 0.0, 0.0);
-        for (size_t x = 0; x < m_luminance.size(); ++x) {
+        for (size_t x = 0; x < m_frame->GetWidth(); ++x) {
             double plotX = kLeft + x * xScale;
-            double plotY = kBottom + m_luminance[x][y] * yScale;
+            double plotY = kBottom + GetY(x, y, m_frame) * yScale;
 
             switch (m_mode) {
                 case MODE_DOTS:
@@ -85,8 +99,8 @@ void GLWidget::paintGL()
                     glColor3f(0.0, greenValue, 0.0);
                     break;
                 case MODE_LINES_ACCUMULATE:
-                    colors[x][plotY] += colorStep;
-                    glColor3f(0.0, colors[x][plotY], 0.0);
+                    // colors[x][plotY] += colorStep;
+                    // glColor3f(0.0, colors[x][plotY], 0.0);
                     break;
                 case MODE_LINES_ALPHA:
                     glColor4f(0.0, 1.0, 0.0, 0.5);

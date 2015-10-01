@@ -39,11 +39,12 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
+    /* Unit Test
     libav::AVInputFile inputFile("/Users/daniel/Movies/20150909_111119.mp4");
     libav::AVStream fileStream(inputFile);
-
     FrameCallbackHandler callback;
     fileStream.Decode(callback);
+    */
 
     MainWidget w;
     w.show();
