@@ -4,6 +4,9 @@
 
 #include <QWidget>
 
+#include <memory>
+
+
 class GLWidget;
 
 class MainWidget : public QWidget
@@ -16,6 +19,6 @@ public:
 
 private:
     GLWidget* m_glWidget;
-    FrameExtractor m_frameExtractor;
+    std::unique_ptr<FrameExtractor> m_frameExtractor;
 };
 

@@ -34,4 +34,5 @@ private:
 
     DrawMode m_mode;
     const libav::AVFrame* m_frame;
+    bool m_vectorscope;
 };

@@ -330,6 +330,7 @@ class AVFrame : public AVFrameBase
 public:
     AVFrame()
     {
+        memset(&m_frame, 0, sizeof(m_frame));
         ::av_frame_unref(&m_frame);
     }
 
