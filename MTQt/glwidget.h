@@ -5,8 +5,6 @@
 #include <QGLWidget>
 #include <QKeyEvent>
 
-struct YFrameInfo {
-};
 
 class GLWidget : public QGLWidget
 {
@@ -14,7 +12,9 @@ class GLWidget : public QGLWidget
 
 public:
     explicit GLWidget(QWidget* parent = nullptr);
-    virtual QSize minimumSizeHint() const override { return QSize(320, 255); }
+
+    virtual QSize sizeHint() const override { return QSize(255, 255); }
+    virtual QSize minimumSizeHint() const override { return sizeHint(); }
 
     void FeedFrame(const libav::AVFrame* frame);
 

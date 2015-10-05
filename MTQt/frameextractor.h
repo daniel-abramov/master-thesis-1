@@ -27,7 +27,7 @@ class FrameExtractor : public QObject {
 public:
     FrameExtractor(GLWidget& frameReceiver, const char* filename)
         : m_frameReceiver(frameReceiver)
-        , m_inputFile("/Users/daniel/Movies/20150909_111119.mp4")
+        , m_inputFile(filename)
         , m_fileStream(m_inputFile)
         , m_timerId(startTimer(1000 / 30))
     {

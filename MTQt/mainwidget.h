@@ -8,6 +8,8 @@
 
 
 class GLWidget;
+class QKeyEvent;
+
 
 class MainWidget : public QWidget
 {
@@ -16,6 +18,9 @@ class MainWidget : public QWidget
 public:
     MainWidget(QWidget* parent = nullptr);
     ~MainWidget();
+
+private:
+    void keyPressEvent(QKeyEvent* keyEvent);
 
 private:
     GLWidget* m_glWidget;
