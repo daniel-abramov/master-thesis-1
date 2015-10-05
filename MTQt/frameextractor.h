@@ -1,13 +1,12 @@
 #pragma once
 
-#include "glwidget.h"
+#include "mainwidget.h"
 #include "libav.h"
 
 #include <QString>
+#include <QTimerEvent>
 
 #include <queue>
-
-class QTimerEvent;
 
 class FrameExtractor : public QObject {
     Q_OBJECT
@@ -25,12 +24,17 @@ class FrameExtractor : public QObject {
     };
 
 public:
-    FrameExtractor(GLWidget& frameReceiver, const char* filename)
+    FrameExtractor(MainWidget& frameReceiver, const char* filename)
         : m_frameReceiver(frameReceiver)
         , m_inputFile(filename)
         , m_fileStream(m_inputFile)
         , m_timerId(startTimer(1000 / 30))
     {
+    }
+
+    ~FrameExtractor()
+    {
+        killTimer(m_timerId); // Precaution
     }
 
 private:
@@ -56,7 +60,7 @@ private:
     }
 
 private:
-    GLWidget&             m_frameReceiver;
+    MainWidget&           m_frameReceiver;
     libav::AVInputFile    m_inputFile;
     libav::AVStream       m_fileStream;
     FrameCallbackHandler  m_callback;

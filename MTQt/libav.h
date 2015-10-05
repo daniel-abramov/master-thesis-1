@@ -759,7 +759,11 @@ public:
 private:
     void AllocFrame(const AVImageFormat& fmt)
     {
-        ::avpicture_alloc(GetPicture(), fmt.format, fmt.width, fmt.height);
+        int s = ::avpicture_alloc(GetPicture(), fmt.format, fmt.width, fmt.height);
+        if (s < 0)
+            throw AVError("av_picture_alloc", s);
+        GetRaw()->width = fmt.width;
+        GetRaw()->height = fmt.height;
     }
 
     void ConvertFrame(const AVImageFormat& fmt, const AVFrame& src)
