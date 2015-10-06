@@ -25,7 +25,8 @@ private:
     void keyPressEvent(QKeyEvent* keyEvent);
 
 private:
-    GLWidget* m_glWidget;
-    QGLCanvas* m_glCanvas;
+    GLWidget* m_waveform;
+    GLWidget* m_vectorscope;
+    QGLCanvas* m_canvas;
     std::unique_ptr<FrameExtractor> m_frameExtractor;
 };

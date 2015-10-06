@@ -12,11 +12,11 @@ static inline uint8_t GetY(int x, int y, const libav::AVFrame *f)
     return f->GetPlane(0)[ (y * f->GetLineSize(0)) + x ];
 }
 
-GLWidget::GLWidget(QWidget* parent)
+GLWidget::GLWidget(bool vectorscope, QWidget* parent)
     : QGLWidget(parent)
     , m_mode(MODE_DOTS)
     , m_frame(nullptr)
-    , m_vectorscope(false)
+    , m_vectorscope(vectorscope)
 {
 }
 

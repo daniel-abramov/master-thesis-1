@@ -11,7 +11,7 @@ class GLWidget : public QGLWidget
     Q_OBJECT
 
 public:
-    explicit GLWidget(QWidget* parent = nullptr);
+    explicit GLWidget(bool vectorscope, QWidget* parent = nullptr);
 
     virtual QSize sizeHint() const override { return QSize(255, 255); }
     virtual QSize minimumSizeHint() const override { return sizeHint(); }
